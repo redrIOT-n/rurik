@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cdk.h>
 
 #define CNTRL_KEY(x) ((x) & 0x1f)
 
@@ -35,7 +36,9 @@ struct windows{
   WINDOW *hold_debugger;
   WINDOW *debugger;
 
+  WINDOW *hold_file_browser;
   WINDOW *file_browser;
+
   WINDOW *statusbar;
 };
 typedef struct windows Window;
@@ -151,16 +154,59 @@ void editor_hold(void){
 }
 
 /*##################### file browser ####################*/
+struct cdk_scrns{
+
+  CDKSCREEN *file_screen;
+  CDKSCROLL *cdk_file_browser;
+  CDK_CONST char **file_list;
+};
+
+typedef struct cdk_scrns FileScreen;
+FileScreen fs;
 int no_of_files;
 
-void put_files(int highlight, int y){
+void create_scroll(int x, int y){
 
+  chtype c = 0 | A_REVERSE;
+  fs.cdk_file_browser = newCDKScroll(
+            fs.file_screen,    x, 
+            y,              RIGHT, 
+            0,              0, 
+            NULL,           fs.file_list, 
+            no_of_files,    false, 
+            c,              false,
+            false
+            );
+
+  drawCDKScroll(fs.cdk_file_browser, false);
+}
+
+
+void open_file(char *filename){
+
+  return;
+}
+
+void listen_file(void){
+
+  int ret = activateCDKScroll(fs.cdk_file_browser, 0);
+  open_file(fs.file_list[ret]);
+}
+
+
+CDK_CONST char **find_files(void){
+
+  int bufferSize = 64;
+  CDK_CONST char **buffer;
   int i = 0;
+
+  buffer = malloc(bufferSize * sizeof(CDK_CONST char *));
+
   DIR *dir = opendir(".");
   if(dir == NULL){
 
-    on_i_error("Could not open directory");
-    return;
+    on_i_error("Could not open current directory [1]");
+    return NULL;
   }
 
   struct dirent *dentry;
@@ -169,76 +215,64 @@ void put_files(int highlight, int y){
   if(dentry == NULL){
 
     on_i_error("No files found");
-    return;
+    return NULL;
   }
-  while(dentry != NULL){
 
-    if((strcmp(dentry->d_name, ".") == 0 || strcmp(dentry->d_name, "..") == 0 || dentry->d_type == 4)){
+  while (dentry != NULL){
+
+    if((strcmp(dentry->d_name, ".") == 0) || (strcmp(dentry->d_name, "..") == 0) || (dentry->d_type == 4)){
+
       dentry = readdir(dir);
       continue;
     }
+    if(i == bufferSize){
 
-    if(i == highlight){
-      wattron(win.file_browser, A_REVERSE);
-      mvwprintw(win.file_browser, y, 2, "%s", dentry->d_name);
-      wattroff(win.file_browser, A_REVERSE);
-    }else{
-      mvwprintw(win.file_browser, y, 2, "%s", dentry->d_name);
+      buffer = realloc(buffer, sizeof(CDK_CONST char *) * (bufferSize += 3));
     }
+
+    buffer[i] = (CDK_CONST char *)dentry->d_name;
+
     dentry = readdir(dir);
-    y++;
     i++;
   }
-  wrefresh(win.file_browser);
   no_of_files = i;
-  return;
+
+  return buffer;
 }
 
-void listen_file(){
+int show_files(void){
 
-  int ch;
-  int highlight = 0;
-  while (1){
+  fs.file_list = find_files();
+  if(fs.file_list == NULL) return -1;
 
-    ch = wgetch(win.file_browser);
-    switch(ch){
+  win.file_browser = derwin(win.hold_file_browser, LINES-22, 18, 1, 1);
+  fs.file_screen = initCDKScreen(win.file_browser);
 
-      case KEY_UP:
-        highlight--;
-        if(highlight == -1) highlight = no_of_files-1;
-        break;
+  raw();
 
-      case KEY_DOWN:
-        highlight++;
-        if(highlight == no_of_files) highlight = 0;
-        break;
+  if(fs.file_screen == NULL) {
 
-      case CNTRL_KEY('q'):
-        return;
-    }
-    put_files(highlight, 1);
+    on_i_error("Could not init file browser window");
+    return -1;
   }
 
-  refresh();
+  create_scroll(COLS-22, 4);
+  return 0;
 }
 
-
-void show_files(void){
+void file_browser_hold(void){
 
   WinConfig size;
 
   assign_sizes(&size, LINES-20, 20, 3, COLS-20, 1, 1);
-  win.file_browser = create_new(&size);
+  win.hold_file_browser = create_new(&size);
 
-  mvwprintw(win.file_browser, 0, size.x, "Files");
-  wrefresh(win.file_browser);
+  mvwprintw(win.hold_file_browser, 0, size.x, "Files");
+  wrefresh(win.hold_file_browser);
 
-  keypad(win.file_browser, true);
+  if(show_files() == -1) return;
 
-  put_files(0, size.y);
-  refresh();
-
-  return;
+  wrefresh(win.hold_file_browser);
 }
 
 /*####################### terminal ######################*/
@@ -462,7 +496,6 @@ char **parse(char *str){
 
 void run_shell(void){
 
-  raw();
   echo();
 
   keypad(win.terminal, true);
@@ -625,17 +658,17 @@ void listen_menubar(void){
         highlight = 0;
         display_content(highlight, 1, 1);
 
-        wborder(win.file_browser, '|', '|', '~', '~', '+', '+', '+', '+');
-        wrefresh(win.file_browser);
+        wborder(win.hold_file_browser, '|', '|', '~', '~', '+', '+', '+', '+');
+        wrefresh(win.hold_file_browser);
 
         on_i_error("file browser : navigation = [Arrow up/down] : exit = [CTRL + q]");
         listen_file();
 
         on_i_error("menu bar : navigation = [Arrow left/right], [CTRL + f], [CTRL + e], [CTRL + t], [CTRL + d], [CTRL + q]");
 
-        box(win.file_browser, 0, 0);
-        mvwprintw(win.file_browser, 0, 1, "Files");
-        wrefresh(win.file_browser);
+        box(win.hold_file_browser, 0, 0);
+        mvwprintw(win.hold_file_browser, 0, 1, "Files");
+        wrefresh(win.hold_file_browser);
 
         break;
 
@@ -648,13 +681,20 @@ void listen_menubar(void){
         highlight = 2;
         display_content(highlight, 1, 1);
 
+        wborder(win.hold_terminal, '|', '|', '~', '~', '+', '+', '+', '+');
+        wrefresh(win.hold_terminal);
+
         on_i_error("terminal : navigation = [keyboard]");
         run_shell();
 
         on_i_error("menu bar : navigation = [Arrow left/right], [CTRL + f], [CTRL + e], [CTRL + t], [CTRL + d], [CTRL + q]");
 
+        box(win.hold_terminal, 0, 0);
+        mvwprintw(win.hold_terminal, 0, 1, "Terminal");
+        wrefresh(win.hold_terminal);
+
         noecho();
-        raw();
+
         break;
 
       case CNTRL_KEY('d'):
@@ -679,16 +719,30 @@ void listen_menubar(void){
 
           case 0:
 
-            wborder(win.file_browser, '|',  '|', '~', '~', '+', '+', '+', '+');
+            wborder(win.hold_file_browser, '|',  '|', '~', '~', '+', '+', '+', '+');
             on_i_error("file browser : navigation = [Arrow up/down] : exit = [CTRL + q]");
 
-            listen_file();
+            //listen_file();
 
             on_i_error("menu bar : navigation = [Arrow left/right], [CTRL + f], [CTRL + e], [CTRL + t], [CTRL + d], [CTRL + q]");
 
-            box(win.file_browser, 0, 0);
-            mvwprintw(win.file_browser, 0, 1, "Files");
-            wrefresh(win.file_browser);
+            box(win.hold_file_browser, 0, 0);
+            mvwprintw(win.hold_file_browser, 0, 1, "Files");
+            wrefresh(win.hold_file_browser);
+            break;
+
+          case 2:
+
+            wborder(win.hold_terminal, '|', '|', '~', '~', '+', '+', '+', '+');
+            on_i_error("terminal : navigation = [keyboard]");
+            run_shell();
+
+            on_i_error("menu bar : navigation = [Arrow left/right], [CTRL + f], [CTRL + e], [CTRL + t], [CTRL + d], [CTRL + q]");
+
+            box(win.hold_terminal, 0, 0);
+            mvwprintw(win.hold_terminal, 0, 1, "Terminal");
+            wrefresh(win.hold_terminal);
+
             break;
 
           case 4:
@@ -716,6 +770,7 @@ void show_menu(void){
 /*####################### destroy #######################*/
 void destroy(void){
 
+  destroyCDKScroll(fs.cdk_file_browser);
   wborder(win.file_browser, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
   wborder(win.text_editor, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
   wborder(win.terminal, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
@@ -724,7 +779,7 @@ void destroy(void){
   wborder(win.hold_editor, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
   wborder(win.hold_debugger, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
   wborder(win.hold_terminal, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
-
+  wborder(win.hold_file_browser, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 
   wrefresh(win.file_browser);
   wrefresh(win.text_editor);
@@ -734,7 +789,9 @@ void destroy(void){
   wrefresh(win.hold_debugger);
   wrefresh(win.hold_editor);
   wrefresh(win.hold_terminal);
+  wrefresh(win.hold_file_browser);
 
+  destroyCDKScreen(fs.file_screen);
   delwin(win.file_browser);
   delwin(win.text_editor);
   delwin(win.terminal);
@@ -743,6 +800,7 @@ void destroy(void){
   delwin(win.hold_editor);
   delwin(win.hold_debugger);
   delwin(win.hold_terminal);
+  delwin(win.hold_file_browser);
 
   endwin();
 }
@@ -759,11 +817,15 @@ int main(void){
   keypad(stdscr, true);
 
   show_menu();
+
   editor_hold();
   terminal_hold();
   debugger_hold();
+
   show_statusbar();
-  show_files();
+
+  file_browser_hold();
+
   refresh();
 
   listen_menubar();

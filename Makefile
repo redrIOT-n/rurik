@@ -1,7 +1,7 @@
 all: main
 
 main: main.c
-	gcc -g -lncurses main.c -o main
+	gcc -g -lncurses main.c -lcdk -o main
 
 clean:
 	rm -f main
