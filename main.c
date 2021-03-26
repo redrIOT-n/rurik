@@ -45,7 +45,37 @@ typedef struct windows Window;
 
 Window win;
 
+/*###################### error handle ####################*/
+void on_i_error_clear(void){
+
+  size_t i;
+  char string[COLS - 1];
+  for(i = 0; i < sizeof(string); i++){
+
+    string[i] = ' ';
+  }
+  string[i] = '\0';
+
+  mvwprintw(win.statusbar, 1, 1, "%s", string);
+  box(win.statusbar, 0, 0);
+  wrefresh(win.statusbar);
+
+  refresh();
+  return;
+}
+
+void on_i_error(const char *error){
+
+  on_i_error_clear();
+
+  mvwprintw(win.statusbar, 1, 1, "%s", error);
+  wrefresh(win.statusbar);
+  refresh();
+  return;
+}
+
 /*####################### utilities ######################*/
+//compare two strings
 bool cmpr(char *cmp1, char *cmp2){
 
   size_t i;
@@ -66,34 +96,48 @@ bool cmpr(char *cmp1, char *cmp2){
   return true;
 }
 
-/*###################### error handle ####################*/
+//copy selected file before editing
+int copy_file(char *filename, char *cpyfilename){
 
-void on_i_error_clear(void){
+  int c;
+  char buffer[1];
 
-  size_t i;
-  char string[COLS - 1];
-  for(i = 0; i < sizeof(string); i++){
-    string[i] = ' ';
+  snprintf(cpyfilename, strlen(filename) + 5, "%s.cpy", filename);
+
+  on_i_error(cpyfilename);
+
+  int orgfile, cpyfile;
+
+  orgfile = open(filename, O_RDONLY);
+  if(orgfile == -1){
+
+    on_i_error("Error opening original file [1]");
+    return -1;
   }
-  string[i] = '\0';
-  mvwprintw(win.statusbar, 1, 1, "%s", string);
-  box(win.statusbar, 0, 0);
-  wrefresh(win.statusbar);
-  refresh();
-  return;
-}
 
-void on_i_error(const char *error){
+  cpyfile = open(cpyfilename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+  if(cpyfile == -1){
 
-  on_i_error_clear();
+    on_i_error("Error opening copy file [1]");
+    return -1;
+  }
 
-  mvwprintw(win.statusbar, 1, 1, "%s", error);
-  wrefresh(win.statusbar);
-  refresh();
-  return;
+  int rret;
+  rret = read(orgfile, buffer, sizeof(buffer));
+
+  while(rret == 1){
+
+    write(cpyfile, buffer, sizeof(buffer));
+    rret = read(orgfile, buffer, sizeof(buffer));
+  }
+  close(orgfile);
+  close(cpyfile);
+
+  return 0;
 }
 
 /*############### assign sizes of window #################*/
+
 void assign_sizes(WinConfig *win, int height, int width, int starty, int startx, int y, int x){
 
   win->height = height;
@@ -128,16 +172,93 @@ WINDOW *create_newder(WINDOW *org, WinConfig *win){
 
 
 /*######################## editor #######################*/
+void open_file(char *filename){
+
+  wborder(win.hold_editor, '|', '|', '~', '~', '+', '+', '+' ,'+');
+  wrefresh(win.hold_editor);
+
+  char cpyfilename[256];
+  if(copy_file(filename, cpyfilename) == -1) {
+
+    box(win.hold_editor, 0, 0);
+    wrefresh(win.hold_editor);
+    return;    
+  };
+
+  FILE *fh;
+  int y, x;
+  int c, prevc = 0;
+
+  fh = fopen(cpyfilename, "r");
+  if(fh == NULL) {
+
+    on_i_error("Error opening copy file [3]");
+  }
+
+  while((c = fgetc(fh)) != EOF){
+
+    if(prevc == '/' && c == '*') attron(A_BOLD);
+    if(prevc == '*' && c == '/') attroff(A_BOLD);
+
+    waddch(win.text_editor, c);
+
+    prevc = c;
+  }
+  wmove(win.terminal, 0, 0);
+
+  prefresh();
+}
+
 void show_editor(void){
 
-  WinConfig size;
-
-  assign_sizes(&size, LINES-22, COLS-22, 1, 1, 1, 1);
-  win.text_editor = create_newder(win.hold_editor, &size);
-
-  wrefresh(win.text_editor);
+  win.text_editor = subpad(win.hold_editor, LINES-22, COLS-22, 1, 1);
 
   keypad(win.text_editor, true);
+}
+
+void listen_editor(void){
+
+  show_editor();
+  echo();
+  noraw();
+
+  int c, y, x;
+  int max_y, max_x;
+
+  c = wgetch(win.text_editor);
+  while(1){
+
+    getmaxyx(win.text_editor, max_y, max_x);
+    getyx(win.text_editor, y, x);
+    switch(c){
+
+      case CNTRL_KEY('q'):
+        return;
+      
+      case KEY_UP:
+        y--;
+        if(y == -1) y = max_y - 1;
+        break;
+      
+      case KEY_DOWN:
+        y++;
+        if(y == max_y) y = 0;
+        break;
+      
+      case KEY_LEFT:
+        x--;
+        if(x == -1){
+          
+          y--;
+          if(y == -1) y = max_y - 1;
+          x = max_x- 1;
+        }
+    }
+    wmove(win.text_editor, y, x);
+    wrefresh(win.text_editor);
+  }
+
+  return;
 }
 
 void editor_hold(void){
@@ -147,13 +268,12 @@ void editor_hold(void){
   win.hold_editor = create_new(&size);
 
   mvwprintw(win.hold_editor, 0, size.x, "Editor");
-
-  show_editor();
-
   wrefresh(win.hold_editor);
 }
 
 /*##################### file browser ####################*/
+
+//struct to hold cdk widgets
 struct cdk_scrns{
 
   CDKSCREEN *file_screen;
@@ -163,37 +283,31 @@ struct cdk_scrns{
 
 typedef struct cdk_scrns FileScreen;
 FileScreen fs;
+
+//number of files
 int no_of_files;
 
+
+//create scroll window
 void create_scroll(int x, int y){
 
   chtype c = 0 | A_REVERSE;
-  fs.cdk_file_browser = newCDKScroll(
-            fs.file_screen,    x, 
-            y,              RIGHT, 
-            0,              0, 
-            NULL,           fs.file_list, 
-            no_of_files,    false, 
-            c,              false,
-            false
-            );
+  fs.cdk_file_browser = newCDKScroll(fs.file_screen, x, y, 
+                                      RIGHT, 0, 0, NULL, fs.file_list, 
+                                      no_of_files, false, c,              
+                                      false, false);
 
   drawCDKScroll(fs.cdk_file_browser, false);
 }
 
-
-void open_file(char *filename){
-
-  return;
-}
-
+//start_listening from file browser
 void listen_file(void){
 
   int ret = activateCDKScroll(fs.cdk_file_browser, 0);
   open_file(fs.file_list[ret]);
 }
 
-
+//find files.. ignore all directories
 CDK_CONST char **find_files(void){
 
   int bufferSize = 64;
@@ -240,6 +354,8 @@ CDK_CONST char **find_files(void){
   return buffer;
 }
 
+
+//show found files in the scroll window
 int show_files(void){
 
   fs.file_list = find_files();
@@ -260,6 +376,8 @@ int show_files(void){
   return 0;
 }
 
+
+//hold scroll window
 void file_browser_hold(void){
 
   WinConfig size;
@@ -275,7 +393,21 @@ void file_browser_hold(void){
   wrefresh(win.hold_file_browser);
 }
 
-/*####################### terminal ######################*/
+/*####################### terminal ######################*/ 
+
+/***warning
+ * terminal implemented in this program is not very powerful.
+ * it is built on top of ncurses and weird behaviours are very common
+ * but i have no idea on how to implement a good terminal
+ * one i implemented is just a rip off of my previous project `BURUWA shell`
+ * i tried vterm but failed to fing any documentaion.
+ * i may not be able to implement another terminal
+ * but if you can, or have any idea about improving this terminal,
+ * please dont hesitate to implement or inform me,
+ *                                                 -redrIOT-n
+ */  
+
+//change directory of the process (shell)
 void changeDir(char *dirname){
 
   char *path;
@@ -293,6 +425,8 @@ void changeDir(char *dirname){
   return;
 }
 
+
+//start a child process using user input and waiting for output.
 int start_process(char **string){
 
   int wstatus;
@@ -309,7 +443,7 @@ int start_process(char **string){
   }
   else if(p == 0){
 
-    int fd = open(filename, O_WRONLY | O_SYNC | O_CREAT | O_TRUNC, 0777);
+    int fd = open(filename, O_WRONLY | O_SYNC | O_CREAT | O_TRUNC, 0777);     //open a file `filename` with write only on child process
 
     if(fd == -1){
 
@@ -317,8 +451,8 @@ int start_process(char **string){
       abort();
     }
 
-    dup2(fd, STDOUT_FILENO);
-    dup2(fd, STDERR_FILENO);
+    dup2(fd, STDOUT_FILENO);                                                  //replace stdout with open file descriptor fd
+    dup2(fd, STDERR_FILENO);                                                  //replace stderr with open file descriptor fd
     close(fd);
 
     if(execvp(string[0], string) == -1){
@@ -329,10 +463,10 @@ int start_process(char **string){
   else {
 
     do{
-      pid = waitpid(p, &wstatus, WUNTRACED);
+      pid = waitpid(p, &wstatus, WUNTRACED);                                  //waiting for child process to exit
     }while(!WIFEXITED(wstatus) && !WIFSIGNALED(wstatus));
 
-    int fd1 = open(filename, O_RDONLY);
+    int fd1 = open(filename, O_RDONLY);                                       //open file `filename` for reading
     if(fd1 == -1){
 
       on_i_error("Could not open the file");
@@ -349,7 +483,7 @@ int start_process(char **string){
     FD_ZERO(&readfds);
     FD_SET(fd1, &readfds);
 
-    selret = select(fd1 + 1, 
+    selret = select(fd1 + 1,                                                   //waiting 20 seconds till data is available for reading 
         &readfds, 
         NULL, 
         NULL, 
@@ -386,7 +520,7 @@ int start_process(char **string){
             char *s;
       char buffer[max_x - 2];
 
-      while((s = fgets(buffer, sizeof(buffer), fh))){
+      while((s = fgets(buffer, sizeof(buffer), fh))){                           //get line from file untill EOF reached
 
         if(s == NULL){
 
@@ -409,6 +543,8 @@ int start_process(char **string){
   return pid;
 }
 
+
+//read buffer from user
 char *read_buffer(void){
 
   int c;
@@ -459,6 +595,8 @@ char *read_buffer(void){
   return buffer;
 }
 
+
+//break `char *` to `char *[]`
 char **parse(char *str){
 
   char *dels = " \t";
@@ -494,6 +632,8 @@ char **parse(char *str){
   return string;
 }
 
+
+//start the shell by priting `shell ~>`
 void run_shell(void){
 
   echo();
@@ -550,18 +690,23 @@ void run_shell(void){
     wrefresh(win.terminal);
   }
 }
+
+
+//show terminal to user that it exists
 void show_terminal(void){
 
   WinConfig size;
 
   assign_sizes(&size, 20 - 8, (COLS/2) - 2, 1, 1, 1, 1);
-  win.terminal = create_newder(win.hold_terminal, &size);
-
+  win.terminal = create_newder(win.hold_terminal, &size);                     //creating a subwindow(window inside another) to run shell 
+                                                                              //without destroying borders of the window
   wrefresh(win.terminal);
 
   keypad(win.terminal, true);
 }
 
+
+//hold `win.terminal` window
 void terminal_hold(void){
 
   WinConfig size;
