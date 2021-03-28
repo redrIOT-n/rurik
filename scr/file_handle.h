@@ -3,9 +3,11 @@
 
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
+#include <unistd.h>
 
 typedef struct {
 
@@ -14,7 +16,7 @@ typedef struct {
   int fileSize;
 } CurrentFile;
 
-int copy_file(char *filename, char *cpyfilename);
-void open_file(char *filename);
+int copy_file(CurrentFile *f, char *filename, char *cpyfilename);
+char *open_file(CurrentFile *f, char *filename);
 
 #endif

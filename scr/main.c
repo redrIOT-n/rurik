@@ -1,15 +1,13 @@
 #include <stdio.h>
 #include <ncurses.h>
-#include <unistd.h>
-#include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/wait.h>
 #include <errno.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <cdk.h>
+
+#include "file_handle.h"
 
 #define CNTRL_KEY(x) ((x) & 0x1f)
 
@@ -96,45 +94,6 @@ bool cmpr(char *cmp1, char *cmp2){
   return true;
 }
 
-//copy selected file before editing
-int copy_file(char *filename, char *cpyfilename){
-
-  int c;
-  char buffer[1];
-
-  snprintf(cpyfilename, strlen(filename) + 5, "%s.cpy", filename);
-
-  on_i_error(cpyfilename);
-
-  int orgfile, cpyfile;
-
-  orgfile = open(filename, O_RDONLY);
-  if(orgfile == -1){
-
-    on_i_error("Error opening original file [1]");
-    return -1;
-  }
-
-  cpyfile = open(cpyfilename, O_WRONLY | O_CREAT | O_TRUNC, 0777);
-  if(cpyfile == -1){
-
-    on_i_error("Error opening copy file [1]");
-    return -1;
-  }
-
-  int rret;
-  rret = read(orgfile, buffer, sizeof(buffer));
-
-  while(rret == 1){
-
-    write(cpyfile, buffer, sizeof(buffer));
-    rret = read(orgfile, buffer, sizeof(buffer));
-  }
-  close(orgfile);
-  close(cpyfile);
-
-  return 0;
-}
 
 /*############### assign sizes of window #################*/
 
@@ -171,68 +130,14 @@ WINDOW *create_newder(WINDOW *org, WinConfig *win){
 }
 
 /*######################## editor #######################*/
-typedef struct{
-  int no_of_lines;
-  int maximum_cols;
-} CurrentScreen;
+void print_screen(char *buffer, CurrentFile *f){
 
-CurrentScreen Cs;
-
-void open_file(char *filename){
-
-  int now_max_cols, prev_max_cols = 0;
-  wborder(win.hold_editor, '|', '|', '~', '~', '+', '+', '+' ,'+');
-  wrefresh(win.hold_editor);
-
-  char cpyfilename[256];
-  if(copy_file(filename, cpyfilename) == -1) {
-
-    box(win.hold_editor, 0, 0);
-    wrefresh(win.hold_editor);
-    return;
-  };
-
-  FILE *fh;
   int max_y, max_x;
-  int c, prevc = 0;
 
-  fh = fopen(cpyfilename, "r");
-  if(fh == NULL) {
+  getmaxyx(win.text_editor, max_x, max_y);
 
-    on_i_error("Error opening copy file [3]");
-  }
 
-  while((c = fgetc(fh)) != EOF){
 
-    now_max_cols++;
-    if(prevc == '/' && c == '*') attron(A_BOLD);
-    if(prevc == '*' && c == '/') attroff(A_BOLD);
-    if(c == '\n'){
-
-      Cs.no_of_lines++;
-      if(now_max_cols > prev_max_cols) Cs.maximum_cols = now_max_cols;
-    }
-
-    prev_max_cols = now_max_cols;
-    waddch(win.text_editor, c);
-    prevc = c;
-  }
-  wmove(win.text_editor, 0, 0);
-
-  wrefresh(win.hold_editor);
-
-  wgetch(win.text_editor);
-}
-
-void show_editor(void){
-
-  WinConfig size;
-  assign_sizes(&size, LINES-22, COLS-22, 1, 1, 1, 1);
-  win.text_editor = create_newder(win.hold_editor, &size);
-
-  wrefresh(win.text_editor);
-
-  keypad(win.text_editor, true);
 }
 
 void listen_editor(void){
@@ -278,6 +183,18 @@ void listen_editor(void){
 
   return;
 }
+
+void show_editor(void){
+
+  WinConfig size;
+  assign_sizes(&size, LINES-22, COLS-22, 1, 1, 1, 1);
+  win.text_editor = create_newder(win.hold_editor, &size);
+
+  wrefresh(win.text_editor);
+
+  keypad(win.text_editor, true);
+}
+
 void editor_hold(void){
 
   WinConfig size;
@@ -324,12 +241,24 @@ void listen_file(void){
 
   int ret = activateCDKScroll(fs.cdk_file_browser, 0);
   int bufferSize = strlen(fs.file_list[ret]) + 1;
-  char buffer[bufferSize];
+  char filename[bufferSize];
 
-  memcpy(buffer, fs.file_list[ret], bufferSize);
+  memcpy(filename, fs.file_list[ret], bufferSize);
 
   free(fs.file_list);
-  open_file(buffer);
+
+  CurrentFile f;
+  
+  char copyfile[bufferSize + 6];
+  if(copy_file(&f, filename, copyfile) == 1){
+
+    on_i_error("Error copying file");
+    return;
+  }
+
+  char *mapped_buffer = open_file(&f, copyfile);
+
+  print_screen(mapped_buffer, &f);
 }
 
 //find files.. ignore all directories
