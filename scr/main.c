@@ -170,10 +170,17 @@ WINDOW *create_newder(WINDOW *org, WinConfig *win){
   return local;
 }
 
-
 /*######################## editor #######################*/
+typedef struct{
+  int no_of_lines;
+  int maximum_cols;
+} CurrentScreen;
+
+CurrentScreen Cs;
+
 void open_file(char *filename){
 
+  int now_max_cols, prev_max_cols = 0;
   wborder(win.hold_editor, '|', '|', '~', '~', '+', '+', '+' ,'+');
   wrefresh(win.hold_editor);
 
@@ -182,11 +189,11 @@ void open_file(char *filename){
 
     box(win.hold_editor, 0, 0);
     wrefresh(win.hold_editor);
-    return;    
+    return;
   };
 
   FILE *fh;
-  int y, x;
+  int max_y, max_x;
   int c, prevc = 0;
 
   fh = fopen(cpyfilename, "r");
@@ -197,28 +204,39 @@ void open_file(char *filename){
 
   while((c = fgetc(fh)) != EOF){
 
+    now_max_cols++;
     if(prevc == '/' && c == '*') attron(A_BOLD);
     if(prevc == '*' && c == '/') attroff(A_BOLD);
+    if(c == '\n'){
 
-    pechochar(win.text_editor, (chtype)c);
+      Cs.no_of_lines++;
+      if(now_max_cols > prev_max_cols) Cs.maximum_cols = now_max_cols;
+    }
 
+    prev_max_cols = now_max_cols;
+    waddch(win.text_editor, c);
     prevc = c;
   }
-  wmove(win.terminal, 0, 0);
+  wmove(win.text_editor, 0, 0);
 
-  prefresh();
+  wrefresh(win.hold_editor);
+
+  wgetch(win.text_editor);
 }
 
 void show_editor(void){
 
-  win.text_editor = subpad(win.hold_editor, LINES-22, COLS-22, 1, 1);
+  WinConfig size;
+  assign_sizes(&size, LINES-22, COLS-22, 1, 1, 1, 1);
+  win.text_editor = create_newder(win.hold_editor, &size);
+
+  wrefresh(win.text_editor);
 
   keypad(win.text_editor, true);
 }
 
 void listen_editor(void){
 
-  show_editor();
   echo();
   noraw();
 
@@ -260,12 +278,13 @@ void listen_editor(void){
 
   return;
 }
-
 void editor_hold(void){
 
   WinConfig size;
   assign_sizes(&size, LINES-20, COLS-20, 3, 0, 1, 1);
   win.hold_editor = create_new(&size);
+
+  show_editor();
 
   mvwprintw(win.hold_editor, 0, size.x, "Editor");
   wrefresh(win.hold_editor);
@@ -304,7 +323,13 @@ void create_scroll(int x, int y){
 void listen_file(void){
 
   int ret = activateCDKScroll(fs.cdk_file_browser, 0);
-  open_file(fs.file_list[ret]);
+  int bufferSize = strlen(fs.file_list[ret]) + 1;
+  char buffer[bufferSize];
+
+  memcpy(buffer, fs.file_list[ret], bufferSize);
+
+  free(fs.file_list);
+  open_file(buffer);
 }
 
 //find files.. ignore all directories
