@@ -133,11 +133,19 @@ WINDOW *create_newder(WINDOW *org, WinConfig *win){
 void print_screen(char *buffer, CurrentFile *f){
 
   int max_y, max_x;
+  float max_scrolls;
+  int prevc = 0;
 
-  getmaxyx(win.text_editor, max_x, max_y);
+  getmaxyx(win.text_editor, max_y, max_x);
 
+  max_scrolls = (float)f->no_of_lines / (float)max_y;
+  max_scrolls = ceilf(max_scroll);
 
-
+  for(size_t i = 0; i < strlen(buffer); I++){
+    
+    int syntax_code = check_syntax(prevc, buffer[i]);        
+    waddch(win.text_editor, buffer[i]);
+  }
 }
 
 void listen_editor(void){
