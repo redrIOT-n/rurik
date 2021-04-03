@@ -357,8 +357,8 @@ s,@X_LIBS@,,;t t
 s,@X_EXTRA_LIBS@,,;t t
 s,@EXTRA_CFLAGS@,,;t t
 s,@HAVE_STDNORETURN_H@,0,;t t
-s,@PKG_CONFIG@,none,;t t
-s,@ac_pt_PKG_CONFIG@,none,;t t
+s,@PKG_CONFIG@,/usr/bin/pkg-config,;t t
+s,@ac_pt_PKG_CONFIG@,/usr/bin/pkg-config,;t t
 s,@cf_ldd_prog@,,;t t
 s,@EXTRA_LDFLAGS@,,;t t
 s,@ABI_VERSION@,6.2.4,;t t
