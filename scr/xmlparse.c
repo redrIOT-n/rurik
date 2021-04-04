@@ -143,7 +143,7 @@ char **XMLGetChildTextByNode(XMLNode *root){
   char **child_text;
   for (int i = 0; i < root->no_of_children; i++){
   
-    child_text = realloc(child_text, sizeof(char *) * i + 1);
+    child_text = realloc(child_text, sizeof(char *) * i * 1);
     child_text[i] = root->child_node[i]->text;
   }
   return child_text;

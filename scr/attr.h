@@ -1,12 +1,9 @@
 #ifndef _ATTR_
 #define _ATTR_
 
-#include <libxml2/parser.h>
-#include <libxml2/xmlmemory.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "main.h"
+#include <ncurses.h>
+//#include "main.h"
+#include "xmlparse.h"
 
 #define BLACK   0
 #define RED     1
@@ -28,11 +25,13 @@ typedef struct{
   attr_t loops;
   attr_t structures;
   attr_t returns;
-  char *colors[8];
-  char *font_type[10];
+  char **colors;
+  char **font_type;
 } CLangSyntaxScheme;
 
 /* ################ color schemes for other langs ############### */
+
+CLangSyntaxScheme *parse_c_syntax(void);
 
 
 #endif
