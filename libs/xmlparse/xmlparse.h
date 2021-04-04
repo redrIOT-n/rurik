@@ -14,19 +14,26 @@ struct xmlnode{
   char *tag;
   char *text;
   struct xmlnode *parent;
+  struct xmlnode **child_node;
+  int no_of_children;
 }; 
 
 typedef struct xmlnode XMLNode;
 
-typedef struct {
+struct xmldoc{
   
   char *file;
   XMLNode *root;
-} XMLDoc; 
+}; 
+
+typedef struct xmldoc XMLDoc;
 
 bool XMLDocRead(XMLDoc *doc, char *path);
-bool XMLDocFree(XMLDoc *doc);
+void XMLDocFree(XMLDoc *doc);
 XMLNode *XMLNewNode(XMLNode *parent);
 void XMLNodeFree(XMLNode *node);
+void XMLGetTextByTag(XMLNode *root, char *tag, char *textbuf);
+void XMLGetNodeByTag(XMLNode *root, char *tag, XMLNode *c_node);
+char **XMLGetChildTextByNode(XMLNode *root);
 
 #endif

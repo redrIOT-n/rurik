@@ -1,5 +1,5 @@
-#ifndef ATTR
-#define ATTR
+#ifndef _ATTR_
+#define _ATTR_
 
 #include <libxml2/parser.h>
 #include <libxml2/xmlmemory.h>

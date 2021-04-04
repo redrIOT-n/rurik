@@ -1,10 +1,5 @@
 <scheme>
-  <comments>
-    <color>red</color>
-    <font_color>bold</font_color>
-  </comments>
-  <conditionals>
-
-    blaaaa
-  </conditionals>
+  <comments>hutt</comments>
+  <conditionals>blaaaa</conditionals>
+  <color>hutto</color>
 </scheme>

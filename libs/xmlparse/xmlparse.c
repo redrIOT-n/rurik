@@ -12,9 +12,6 @@ bool XMLDocRead(XMLDoc *doc, char *path){
   int size = ftell(fh);
   fseek(fh, 0, SEEK_SET);
 
-  //doc = malloc(sizeof(XMLDoc));
-  //if(doc == NULL) return false;
-
   doc->file = malloc(sizeof(char) * size + 1);
   if(doc->file == NULL) return false;
 
@@ -36,6 +33,7 @@ bool XMLDocRead(XMLDoc *doc, char *path){
     if(doc->file[i] == '<'){
 
       buffer[buffer_i] = '\0';
+      
       if(buffer_i > 0){
       
         if(!current_node) return false;
@@ -61,8 +59,15 @@ bool XMLDocRead(XMLDoc *doc, char *path){
         continue;
       }
       if(current_node == NULL) current_node = doc->root;
-      else current_node = XMLNewNode(current_node);
-      if(current_node == NULL) return NULL;
+      else {
+
+        current_node = XMLNewNode(current_node);
+        if(current_node == NULL) return NULL;
+        
+        current_node->parent->child_node = realloc(current_node->parent->child_node , sizeof(XMLNode *) * current_node->parent->no_of_children);
+        
+        current_node->parent->child_node[current_node->parent->no_of_children++] = current_node;
+      }
 
       i++;
       while(doc->file[i] != '>') buffer[buffer_i++] = doc->file[i++];
@@ -88,23 +93,78 @@ XMLNode *XMLNewNode(XMLNode *parent){
   node->parent = parent;
   node->tag = NULL;
   node->text = NULL;
+  node->child_node = NULL;
+  node->no_of_children = 0;
 
   return node;
 }
 
 void XMLNodeFree(XMLNode *node){
 
-  if(node->tag)
-    free(node->tag);
+  if(node->tag) free(node->tag);
   
-  if(node->text)
-    free(node->text);
+  if(node->text) free(node->text);
 
-  free(node);;
+  if(node->child_node){
+    for(int i = 0; i < node->no_of_children; i++)
+      free(node->child_node[i]);
+    free(node->child_node);
+  }
+  free(node);
 }
 
-bool XMLDocFree(XMLDoc *doc){
+void XMLDocFree(XMLDoc *doc){
 
   free(doc->file);
   free(doc->root);
+}
+
+void XMLGetTextByTag(XMLNode *root, char *tag, char *textbuf){
+
+  XMLNode *node = root;
+  if(!strcmp(node->tag, tag)) {
+   
+    if(root->text != NULL) {
+
+      memcpy(textbuf, node->text, strlen(node->text));
+    }
+  }
+  else{
+  
+    for(int i = 0; i < node->no_of_children; i++){
+    
+      XMLGetTextByTag(node->child_node[i], tag, textbuf);
+    }
+  }
+}
+
+char **XMLGetChildTextByNode(XMLNode *root){
+
+  char **child_text;
+  for (int i = 0; i < root->no_of_children; i++){
+  
+    child_text = realloc(child_text, sizeof(char *) * i + 1);
+    child_text[i] = root->child_node[i]->text;
+  }
+  return child_text;
+}
+
+void XMLGetNodeByTag(XMLNode *root, char *tag, XMLNode *c_node){
+
+  XMLNode *node = root;
+
+  if(!strcmp(node->tag, tag)){
+  
+    memcpy(c_node, node, sizeof(XMLNode));
+  }
+  else{
+  
+    for (int i = 0; i < node->no_of_children; i++)
+      XMLGetNodeByTag(node->child_node[i], tag, c_node);
+  }
+}
+
+void XMLCharFree(char *buffer){
+
+  if(buffer) free(buffer);
 }
