@@ -1,30 +1,40 @@
 #ifndef _ATTR_
 #define _ATTR_
 
-#include <ncurses.h>
-//#include "main.h"
+#include "main.h"
 #include "xmlparse.h"
 
-#define BLACK   0
-#define RED     1
-#define GREEN   2
-#define YELLOW  3
-#define BLUE    4
-#define MAGENTA 5
-#define CYAN    6
-#define WHITE   7
+//BLACK   0
+//RED     1
+//GREEN   2
+//YELLOW  3
+//BLUE    4
+//MAGENTA 5
+//CYAN    6
+//WHITE   7
+
+//NORMAL    0
+//STANDOUT  1
+//UNDERLINE 2
+//REVERSE   3
+//BLINK     4
+//DIM       5
+//BOLD      6
+//INVISIBLE 7
+//ITALIC    8
 
 /* ############## default highlighting ############### */
 
 //c language
 
 typedef struct{
-
-  attr_t comments;
-  attr_t condtional_statements;
-  attr_t loops;
-  attr_t structures;
-  attr_t returns;
+  
+  attr_t statements[5];
+    //comments              = 0
+    //condtional_statements = 1
+    //loops;                = 2
+    //structures;           = 3
+    //returns               = 4
   char **colors;
   char **font_type;
 } CLangSyntaxScheme;

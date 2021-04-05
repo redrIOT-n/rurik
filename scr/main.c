@@ -6,8 +6,10 @@
 #include <sys/wait.h>
 #include <errno.h>
 #include <cdk.h>
+#include <math.h>
 
 #include "file_handle.h"
+#include "attr.h"
 
 #define CNTRL_KEY(x) ((x) & 0x1f)
 
@@ -139,13 +141,9 @@ void print_screen(char *buffer, CurrentFile *f){
   getmaxyx(win.text_editor, max_y, max_x);
 
   max_scrolls = (float)f->no_of_lines / (float)max_y;
-  max_scrolls = ceilf(max_scroll);
+  max_scrolls = ceilf(max_scrolls);
 
-  for(size_t i = 0; i < strlen(buffer); I++){
-    
-    int syntax_code = check_syntax(prevc, buffer[i]);        
-    waddch(win.text_editor, buffer[i]);
-  }
+  check_syntax(buffer);
 }
 
 void listen_editor(void){

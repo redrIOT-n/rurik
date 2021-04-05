@@ -12,7 +12,7 @@
     <c>
       <comments>
         <color>white</color>
-        <font_type></font_type>
+        <font_type>blink</font_type>
       </comments>
       <conditional_statements>
         <color>green</color>
@@ -23,7 +23,7 @@
         <font_type>bold</font_type>
       </loops>
       <structures>
-        <color>pink<color>            
+        <color>pink</color>            
         <font_type>normal</font_type>
       </structures>          
       <return>

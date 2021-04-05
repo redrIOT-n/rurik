@@ -140,10 +140,9 @@ void XMLGetTextByTag(XMLNode *root, char *tag, char *textbuf){
 
 char **XMLGetChildTextByNode(XMLNode *root){
 
-  char **child_text;
+  char **child_text = malloc(sizeof(char *) * root->no_of_children);
   for (int i = 0; i < root->no_of_children; i++){
   
-    child_text = realloc(child_text, sizeof(char *) * i * 1);
     child_text[i] = root->child_node[i]->text;
   }
   return child_text;
@@ -167,4 +166,15 @@ void XMLGetNodeByTag(XMLNode *root, char *tag, XMLNode *c_node){
 void XMLCharFree(char *buffer){
 
   if(buffer) free(buffer);
+}
+
+void XMLFree(XMLNode *root){
+
+  free(root->tag);
+  free(root->text);
+  //free everything in recursion. go through child nodes and free them 
+  for (int i = 0; i < root->no_of_children; i++){
+  
+
+  }
 }
