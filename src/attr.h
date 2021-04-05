@@ -42,6 +42,6 @@ typedef struct{
 /* ################ color schemes for other langs ############### */
 
 CLangSyntaxScheme *parse_c_syntax(void);
-
+void check_syntax(char *buffer);
 
 #endif

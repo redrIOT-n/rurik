@@ -64,7 +64,7 @@ bool XMLDocRead(XMLDoc *doc, char *path){
         current_node = XMLNewNode(current_node);
         if(current_node == NULL) return NULL;
         
-        current_node->parent->child_node = realloc(current_node->parent->child_node , sizeof(XMLNode *) * (current_node->parent->no_of_children + 1));
+        current_node->parent->child_node = realloc(current_node->parent->child_node , sizeof(XMLNode *) * (current_node->parent->no_of_children + 2));
         
         current_node->parent->child_node[current_node->parent->no_of_children++] = current_node;
       }

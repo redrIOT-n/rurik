@@ -2,13 +2,14 @@
 
 int main(void){
 
+  printf("hutt");
   XMLDoc doc;
-  XMLDocRead(&doc, "/home/redriot/projects/test/scr/colorscheme/scheme.xml");
-//  printf("%s\t %s\t%d\n", doc.root->tag, doc.root->child_node[0]->text, doc.root->no_of_children);
-
+  XMLDocRead(&doc, "test/test.xml");
+  printf("blaa");
+  printf("%d\n", doc.root->no_of_children);
 
   XMLNode *current_node = malloc(sizeof(XMLNode));
-  XMLGetNodeByTag(doc.root, "comments", current_node);
+  XMLGetNodeByTag(doc.root, "scheme", current_node);
   printf("%s\n", current_node->tag);
 
 
