@@ -1,6 +1,9 @@
-#ifndef _MAIN_
-#define _MAIN_
+#ifndef MAIN_H
+#define MAIN_H
 
+//#include <fcntl.h>
+//#include <sys/types.h>
+//#include <sys/stat.h>
 #include <ncurses.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -14,6 +17,9 @@
 #include "menubar.h"
 #include "editor.h"
 #include "file_browser.h"
+//#include "file_handle.h"
+//#include "xmlparse.h"
+//#include "attr.h"
 
 #define CNTRL_KEY(x) ((x) & 0x1f)
 
@@ -45,11 +51,9 @@ struct windows{
   WINDOW *statusbar;
 };
 typedef struct windows Window;
+extern Window win;
 
-//oops.. a global...
-Window win;
-
-void assign_sizes(WinConfig *win, int height, int width, int starty, int startx. int y, int x);
+void assign_sizes(WinConfig *win, int height, int width, int starty, int startx, int y, int x);
 WINDOW *create_new(WinConfig *win);
 WINDOW *create_newder(WINDOW *org, WinConfig *win);
 bool cmpr(char *cmp1, char *cmp2);

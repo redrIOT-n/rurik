@@ -1,5 +1,6 @@
 #include "terminal.h"
 
+//#include "main.h"
 /*####################### terminal ######################*/ 
 
 /***warning
@@ -298,16 +299,3 @@ void run_shell(void){
   }
 }
 
-
-//show terminal to user that it exists
-void show_terminal(void){
-
-  WinConfig size;
-
-  assign_sizes(&size, 20 - 8, (COLS/2) - 2, 1, 1, 1, 1);
-  win.terminal = create_newder(win.hold_terminal, &size);                     //creating a subwindow(window inside another) to run shell 
-                                                                              //without destroying borders of the window
-  wrefresh(win.terminal);
-
-  keypad(win.terminal, true);
-}

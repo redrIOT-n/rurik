@@ -1,7 +1,8 @@
-#ifndef _ATTR_
-#define _ATTR_
+#ifndef ATTR_H
+#define ATTR_H
 
 #include "main.h"
+#include "ncurses.h"
 #include "xmlparse.h"
 
 //BLACK   0
@@ -42,6 +43,6 @@ typedef struct{
 /* ################ color schemes for other langs ############### */
 
 CLangSyntaxScheme *parse_c_syntax(void);
-void check_syntax(char *buffer);
+int check_syntax(char *buffer, int current_loc, int max_y, int max_x);
 
 #endif

@@ -1,5 +1,8 @@
 #include "file_browser.h"
 
+int no_of_files;
+FileScreen fs;
+
 //create scroll window
 void create_scroll(int x, int y){
 

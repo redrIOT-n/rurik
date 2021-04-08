@@ -1,5 +1,6 @@
 #include "main.h"
 
+Window win;
 /*###################### error handle ####################*/
 void on_i_error_clear(void){
 
@@ -86,6 +87,18 @@ WINDOW *create_newder(WINDOW *org, WinConfig *win){
 }
 
 /*######################## editor #######################*/
+
+void show_editor(void){
+
+  WinConfig size;
+  assign_sizes(&size, LINES-22, COLS-22, 1, 1, 1, 1);
+  win.text_editor = create_newder(win.hold_editor, &size);
+
+  wrefresh(win.text_editor);
+
+  keypad(win.text_editor, true);
+}
+
 void editor_hold(void){
 
   WinConfig size;
@@ -117,6 +130,19 @@ void file_browser_hold(void){
 }
 
 /*#################### Terminal ########################*/
+//show terminal to user that it exists
+void show_terminal(void){
+
+  WinConfig size;
+
+  assign_sizes(&size, 20 - 8, (COLS/2) - 2, 1, 1, 1, 1);
+  win.terminal = create_newder(win.hold_terminal, &size);                     //creating a subwindow(window inside another) to run shell 
+                                                                              //without destroying borders of the window
+  wrefresh(win.terminal);
+
+  keypad(win.terminal, true);
+}
+
 void terminal_hold(void){
 
   WinConfig size;
@@ -131,6 +157,7 @@ void terminal_hold(void){
 }
 
 /*####################### debugger ######################*/
+
 void show_debugger(void){
 
   WinConfig size;
@@ -142,7 +169,6 @@ void show_debugger(void){
 
   keypad(win.debugger, true);
 }
-
 void debugger_hold(void){
 
   WinConfig size;
@@ -165,6 +191,19 @@ void show_statusbar(void){
   win.statusbar = create_new(&size);
 
   wrefresh(win.statusbar);
+}
+
+/*######################### menu ########################*/
+void show_menu(void){
+
+  WinConfig size;
+
+  assign_sizes(&size, 3, COLS, 0, 0, 1, 1);
+  win.menubar = create_new(&size);
+  keypad(win.menubar, true);
+
+  display_content(0, size.y, size.x);
+  wrefresh(win.menubar);
 }
 
 /*####################### destroy #######################*/

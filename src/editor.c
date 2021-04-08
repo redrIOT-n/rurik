@@ -5,16 +5,16 @@ void print_screen(char *buffer, CurrentFile *f){
 
   int max_y, max_x;
   float max_scrolls;
-  int prevc = 0;
 
   getmaxyx(win.text_editor, max_y, max_x);
 
   max_scrolls = (float)f->no_of_lines / (float)max_y;
   max_scrolls = ceilf(max_scrolls);
 
-  check_syntax(buffer);
+  check_syntax(buffer, 0, max_y, max_x);
 }
 
+//this way of implementing scroll is kinda silly. to be reimplemented.
 void listen_editor(void){
 
   echo();
@@ -58,16 +58,4 @@ void listen_editor(void){
 
   return;
 }
-
-void show_editor(void){
-
-  WinConfig size;
-  assign_sizes(&size, LINES-22, COLS-22, 1, 1, 1, 1);
-  win.text_editor = create_newder(win.hold_editor, &size);
-
-  wrefresh(win.text_editor);
-
-  keypad(win.text_editor, true);
-}
-
 

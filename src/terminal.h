@@ -8,6 +8,6 @@ int start_process(char **string);
 char *read_buffer(void);
 char **parse(char *str);
 void run_shell(void);
-void show_terminal(void);
+//void show_terminal(void);
 
 #endif

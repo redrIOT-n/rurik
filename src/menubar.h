@@ -1,10 +1,14 @@
-#ifndef _MENU_BAR_
-#define _MENU_BAR_
+#ifndef MENUBAR_H
+#define MENUBAR_H
 
 #include "main.h"
+#include "editor.h"
+#include "file_browser.h"
+#include "debugger.h"
+#include "editor.h"
+#include "terminal.h"
 
 void display_content(int highlight, int y, int x);
-void show_menu(void);
 void listen_menubar(void);
 
 

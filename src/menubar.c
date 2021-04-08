@@ -141,17 +141,3 @@ void listen_menubar(void){
     }
   }
 }
-
-void show_menu(void){
-
-  WinConfig size;
-
-  assign_sizes(&size, 3, COLS, 0, 0, 1, 1);
-  win.menubar = create_new(&size);
-  keypad(win.menubar, true);
-
-  display_content(0, size.y, size.x);
-  wrefresh(win.menubar);
-}
-
-
