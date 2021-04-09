@@ -3,6 +3,7 @@
 /*################## editor ################*/
 void print_screen(char *buffer, CurrentFile *f){
 
+  wborder(win.hold_terminal, '|', '|', '~', '~', '+', '+', '+', '+');
   int max_y, max_x;
   float max_scrolls;
 
@@ -12,6 +13,10 @@ void print_screen(char *buffer, CurrentFile *f){
   max_scrolls = ceilf(max_scrolls);
 
   check_syntax(buffer, 0, max_y, max_x);
+  wrefresh(win.text_editor);
+  raw();
+  //free(buffer);
+  return;
 }
 
 //this way of implementing scroll is kinda silly. to be reimplemented.

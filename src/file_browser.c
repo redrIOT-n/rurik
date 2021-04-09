@@ -48,7 +48,6 @@ CDK_CONST char **find_files(void){
   int i = 0;
 
   buffer = malloc(bufferSize * sizeof(CDK_CONST char *));
-
   DIR *dir = opendir(".");
   if(dir == NULL){
 

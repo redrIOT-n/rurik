@@ -8,12 +8,14 @@ all:$(BIN)
 
 bin/rurik: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -lncurses -lcdk -lm -o $(BIN)
+	cp $(BIN) .
 
 obj/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f obj/* bin/*
+	rm -f *.cpy
 
 git:
 	git add .

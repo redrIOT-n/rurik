@@ -107,10 +107,14 @@ void listen_menubar(void){
 
           case 0:
 
+            highlight = 0;
+            display_content(highlight, 1, 1);
+        
             wborder(win.hold_file_browser, '|',  '|', '~', '~', '+', '+', '+', '+');
-            on_i_error("file browser : navigation = [Arrow up/down] : exit = [CTRL + q]");
+            wrefresh(win.hold_file_browser);
 
-            //listen_file();
+            on_i_error("file browser : navigation = [Arrow up/down] : exit = [CTRL + q]");
+            listen_file();
 
             on_i_error("menu bar : navigation = [Arrow left/right], [CTRL + f], [CTRL + e], [CTRL + t], [CTRL + d], [CTRL + q]");
 
@@ -122,6 +126,7 @@ void listen_menubar(void){
           case 2:
 
             wborder(win.hold_terminal, '|', '|', '~', '~', '+', '+', '+', '+');
+            wrefresh(win.hold_terminal);
             on_i_error("terminal : navigation = [keyboard]");
             run_shell();
 
