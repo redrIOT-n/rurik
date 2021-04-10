@@ -8,7 +8,7 @@
 
 void clear_editor(int max_y, int max_X);
 void print_screen(char *buffer, CurrentFile *f);
-void listen_editor(char *buffer, int max_scolls, int max_y, int max_x, int current_loc);
+void listen_editor(char *buffer, int max_scolls, int max_y, int max_x);
 //void show_editor(void);
 
 #endif

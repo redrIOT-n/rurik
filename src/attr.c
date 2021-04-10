@@ -135,6 +135,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
 
   wmove(win.text_editor, 0, 0);
   CLangSyntaxScheme *scheme = parse_c_syntax();
+  if(scheme == NULL) return -1;
 
   int lines = 0;
   int i, j;
