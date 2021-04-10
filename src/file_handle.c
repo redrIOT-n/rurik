@@ -43,7 +43,7 @@ char *open_file(CurrentFile *f, char *filename){
 
   int fd;
   
-  f->fileSize = f->fileSize + 2048;
+  f->fileSize = f->fileSize + 65536;
   fd = open(filename, O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
   char *buffer = mmap(NULL, f->fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 

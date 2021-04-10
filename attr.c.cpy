@@ -39,39 +39,42 @@ CLangSyntaxScheme *parse_c_syntax(void){
     for(int j = 0; j < 8; j++){
         
       if(!(strcmp(c_scheme->colors[j], list[0]))){
-       
+        
         switch (j){
 
-        case 0:
+        case COLOR_BLACK:
           init_pair(1, COLOR_BLACK, COLOR_BLACK);
           break;
 
-        case 1:
+        case COLOR_RED:
           init_pair(1, COLOR_RED, COLOR_BLACK);
           break;
 
-        case 2:
+        case COLOR_GREEN:
           init_pair(1, COLOR_GREEN, COLOR_BLACK);
           break;
 
-        case 3:
+        case COLOR_YELLOW:
           init_pair(1, COLOR_YELLOW, COLOR_BLACK);
           break;
 
-        case 4:
+        case COLOR_BLUE:
           init_pair(1, COLOR_BLUE, COLOR_BLACK);
           break;
 
-        case 5:
+        case COLOR_MAGENTA:
           init_pair(1, COLOR_MAGENTA, COLOR_BLACK);
           break;
 
-        case 6:
+        case COLOR_CYAN:
           init_pair(1, COLOR_CYAN, COLOR_BLACK);
           break;
 
-        case 7:
+        case COLOR_WHITE:
           init_pair(1, COLOR_WHITE, COLOR_BLACK);
+          break;
+
+        default:
           break;
         }
         for (int k = 0; k < 9; k++){
@@ -119,10 +122,8 @@ CLangSyntaxScheme *parse_c_syntax(void){
               break;
             }
           }
-          else continue;
         }
       }
-      else continue;
     }
   }
   XMLDocFree(&doc);
@@ -131,9 +132,7 @@ CLangSyntaxScheme *parse_c_syntax(void){
 
 int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
 
-  raw();
-
-  wmove(win.text_editor, 0, 0);
+  noraw();
   CLangSyntaxScheme *scheme = parse_c_syntax();
 
   int lines = 0;
@@ -155,14 +154,11 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
     
     case '\n':
       lines++;
-      if(lines < max_y) {
-        waddch(win.text_editor, buffer[current_loc + i +j]);
-        wmove(win.text_editor, y+1, 0);  
-      }
+      if(lines < max_y) waddch(win.text_editor, buffer[current_loc + i +j]);
       break;
 
     case '/':
-      if(buffer[current_loc + i+1] == '*') {
+      if(buffer[i+1] == '*') {
         wattron(win.text_editor, scheme->statements[0]);
         waddch(win.text_editor, buffer[current_loc + i]);
       }
@@ -170,7 +166,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
       break;
 
     case '*':
-      if(buffer[current_loc + i+1] == '/') {
+      if(buffer[i+1] == '/') {
         wattroff(win.text_editor, scheme->statements[0]);
         waddch(win.text_editor, buffer[current_loc + i]);
       }
@@ -192,7 +188,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
           
           }waddch(win.text_editor, buffer[current_loc + i+j]);
         }
-        i+=(j-1);
+        i+=(j+1);
         wattroff(win.text_editor, scheme->statements[1]);
         continue; 
       }
@@ -215,7 +211,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
           }
           waddch(win.text_editor, buffer[current_loc + i+j]);
         }
-        i+=(j-1);
+        i+=(j+1);
         wattroff(win.text_editor, scheme->statements[1]);
         continue;
       }
@@ -234,7 +230,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
           }
           waddch(win.text_editor, buffer[current_loc + i+j]);
         }
-        i+=(j-1);
+        i+=(j+1);
         wattroff(win.text_editor, scheme->statements[3]);
         continue;
       }
@@ -256,7 +252,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
           }
           waddch(win.text_editor, buffer[current_loc + i+j]);
         }
-        i+=(j-1);
+        i+=(j+1);
         wattroff(win.text_editor, scheme->statements[2]);
         continue;
       }
@@ -278,7 +274,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
           }
           waddch(win.text_editor, buffer[current_loc + i+j]);
         }
-        i+=(j-1);
+        i+=(j+1);
         wattroff(win.text_editor, scheme->statements[2]);
         continue;
       }
@@ -296,7 +292,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
           if(x == max_x) wmove(win.text_editor, y+1, 0);
           waddch(win.text_editor, buffer[current_loc + i+j]);
         }
-        i+=(j-1);
+        i+=(j+1);
         wattroff(win.text_editor, scheme->statements[3]);
         continue;
       }
@@ -318,7 +314,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
           }
           waddch(win.text_editor, buffer[current_loc + i+j]);
         }
-        i+=(j-1);
+        i+=(j+1);
         wattroff(win.text_editor, scheme->statements[4]);
         continue;
       }
@@ -330,6 +326,6 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
     }
   }
   //wprintw(win.text_editor, "%d\n %d\n", max_y, i);
-  current_loc = current_loc + i;
+  current_loc = i;
   return current_loc;
 }
