@@ -141,7 +141,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
   int i, j;
   for (i = 0; lines < max_y; i++){
    
-    if(strlen(buffer) == i) break;
+    if(strlen(buffer) == current_loc + i) break;
 
     int y, x;
     getyx(win.text_editor, y, x);

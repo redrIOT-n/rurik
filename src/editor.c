@@ -15,6 +15,8 @@ void print_screen(char *buffer, CurrentFile *f){
   max_scrolls = ceilf(max_scrolls);
 
   int current_loc = check_syntax(buffer, 0, max_y, max_x);
+  if(current_loc == -1) return;
+
   wrefresh(win.text_editor);
   raw();
   
@@ -43,7 +45,6 @@ void listen_editor(char *buffer, int max_scrolls, int max_y, int max_x){
   int c, y, x;
   int scroll = 0;
 
-  wgetch(win.text_editor);
   while(c = wgetch(win.text_editor)){
 
     getyx(win.text_editor, y, x);
@@ -56,14 +57,14 @@ void listen_editor(char *buffer, int max_scrolls, int max_y, int max_x){
         scroll--;
         if(scroll == -1) scroll = max_scrolls;
         clear_editor(max_y, max_x);
-        check_syntax(buffer, (max_y*max_x) * scroll, max_y, max_x);
+        if((check_syntax(buffer, (max_y*max_x) * scroll, max_y, max_x)) == -1) return;
         break;
 
       case KEY_DOWN:
         scroll++;
         if(scroll == max_scrolls+1) scroll = 0;
         clear_editor(max_y, max_x);
-        check_syntax(buffer, (max_y*max_x) * scroll, max_y, max_x);
+        if((check_syntax(buffer, (max_y*max_x) * scroll, max_y, max_x)) == -1) return;
         break;
 
       case KEY_LEFT:
