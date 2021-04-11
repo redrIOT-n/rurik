@@ -35,6 +35,7 @@ void listen_file(void){
     return;
   }
 
+  int i = 0;
   char *mapped_buffer = open_file(&f, copyfile);
 
   print_screen(mapped_buffer, &f);

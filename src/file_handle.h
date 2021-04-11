@@ -8,7 +8,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <stdlib.h>
 typedef struct {
 
   int no_of_lines;

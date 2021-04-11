@@ -1,5 +1,7 @@
 #include "editor.h"
-
+// find a bettter way for scrolling.
+// a way to devide file into screens using no of lines in the file. each part of the file to be aligh// ned with max_y and max_x.  current_loc of the buffer might be useful.
+//
 /*################## editor ################*/
 void print_screen(char *buffer, CurrentFile *f){
 
@@ -22,6 +24,8 @@ void print_screen(char *buffer, CurrentFile *f){
   
   listen_editor(buffer, max_scrolls, max_y, max_x);
 
+  box(win.hold_editor, 0, 0);
+  wrefresh(win.hold_editor);
   return;
 }
 
@@ -40,7 +44,6 @@ void clear_editor(int max_y, int max_x){
 void listen_editor(char *buffer, int max_scrolls, int max_y, int max_x){
 
   echo();
-  //noraw();
 
   int c, y, x;
   int scroll = 0;
@@ -57,14 +60,14 @@ void listen_editor(char *buffer, int max_scrolls, int max_y, int max_x){
         scroll--;
         if(scroll == -1) scroll = max_scrolls;
         clear_editor(max_y, max_x);
-        if((check_syntax(buffer, (max_y*max_x) * scroll, max_y, max_x)) == -1) return;
+        if((check_syntax(buffer, max_y * scroll, max_y, max_x)) == -1) return;
         break;
 
       case KEY_DOWN:
         scroll++;
         if(scroll == max_scrolls+1) scroll = 0;
         clear_editor(max_y, max_x);
-        if((check_syntax(buffer, (max_y*max_x) * scroll, max_y, max_x)) == -1) return;
+        if((check_syntax(buffer, max_y * scroll, max_y, max_x)) == -1) return;
         break;
 
       case KEY_LEFT:

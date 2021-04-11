@@ -23,29 +23,32 @@ int copy_file(CurrentFile *f, char *filename, char copyfilename[]){
   ret = read(orgfile, buffer, sizeof(buffer));
   while(ret == 1){
 
-    now_max_cols++;
-    if(buffer[0] == '\n'){
+    //now_max_cols++;
+    //if(buffer[0] == '\n'){
 
-      f->no_of_lines++;
-      if(now_max_cols > prev_max_cols) f->max_cols = now_max_cols;
-    }
+    //  f->no_of_lines++;
+    //  if(now_max_cols > prev_max_cols) f->max_cols = now_max_cols;
+    //}
     write(cpyfile, buffer, sizeof(buffer));
     ret = read(orgfile, buffer, sizeof(buffer));
   }
   close(orgfile);
   close(cpyfile);
 
-  f->fileSize = f->max_cols * f->no_of_lines;
+  //f->fileSize = f->max_cols * f->no_of_lines;
   return 0;
 }
 
 char *open_file(CurrentFile *f, char *filename){
 
-  int fd;
-  
-  f->fileSize = f->fileSize + 640;
-  fd = open(filename, O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-  char *buffer = mmap(NULL, f->fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  //int align  = 64000 - f->fileSize;
+  f->fileSize = 640000;  
+  FILE *fh = fopen(filename, "r+");
+  if(fh == NULL) return NULL;
 
+  char *buffer = calloc(f->fileSize, sizeof(char));
+  if(buffer == NULL) return NULL;
+  
+  fread(buffer, sizeof(char), f->fileSize, fh);
   return buffer;
 }

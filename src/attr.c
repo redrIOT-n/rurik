@@ -153,7 +153,7 @@ int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
     }
 
     switch (buffer[current_loc + i]){
-    
+        
     case '\n':
       lines++;
       if(lines < max_y) {
