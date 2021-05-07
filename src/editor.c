@@ -60,14 +60,14 @@ void listen_editor(char *buffer, int max_scrolls, int max_y, int max_x){
         scroll--;
         if(scroll == -1) scroll = max_scrolls;
         clear_editor(max_y, max_x);
-        if((check_syntax(buffer, max_y * scroll, max_y, max_x)) == -1) return;
+        if((check_syntax(buffer, max_y * scroll, max_y, max_x)) == -1) return; //change max_y * scroll
         break;
 
       case KEY_DOWN:
         scroll++;
         if(scroll == max_scrolls+1) scroll = 0;
         clear_editor(max_y, max_x);
-        if((check_syntax(buffer, max_y * scroll, max_y, max_x)) == -1) return;
+        if((check_syntax(buffer, max_y * scroll, max_y, max_x)) == -1) return; // second arg represent the file offset to start printing to the screen
         break;
 
       case KEY_LEFT:

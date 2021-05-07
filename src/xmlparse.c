@@ -107,7 +107,8 @@ void XMLNodeFree(XMLNode *node){
 
   if(node->child_node){
     for(int i = 0; i < node->no_of_children; i++)
-      free(node->child_node[i]);
+      XMLNodeFree(node->child_node[i]);
+    
     free(node->child_node);
   }
   free(node);
@@ -168,13 +169,14 @@ void XMLCharFree(char *buffer){
   if(buffer) free(buffer);
 }
 
-void XMLFree(XMLNode *root){
+/*void XMLFree(XMLNode *root){
 
   free(root->tag);
   free(root->text);
   //free everything in recursion. go through child nodes and free them 
   for (int i = 0; i < root->no_of_children; i++){
   
-
+    
   }
-}
+
+}*/

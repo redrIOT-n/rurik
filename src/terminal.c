@@ -38,8 +38,8 @@ void changeDir(char *dirname){
 int start_process(char **string){
 
   int wstatus;
-  pid_t pid;
-
+  pid_t pid;                                                                  //its better to do this with psuedo terminals
+                                                                              //or pipes. (dont use named pipes you dumb fuck);
   char *filename = "result.txt";
 
   pid_t p = fork();

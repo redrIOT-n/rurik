@@ -129,6 +129,10 @@ CLangSyntaxScheme *parse_c_syntax(void){
   return c_scheme;
 }
 
+//for key up, we have to start priting chars from bottom to up. 
+//
+//
+
 int check_syntax(char *buffer, int current_loc, int max_y, int max_x){
 
   raw();
